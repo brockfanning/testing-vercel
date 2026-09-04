@@ -11,13 +11,10 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: 'Missing temporary authorization code' });
   }
 
-  // 1. Read variables right here at the root entry level
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
-  // 2. Fail early if Vercel hasn't injected the keys yet
   if (!clientId || !clientSecret) {
-    console.error("Vercel Configuration Error: Missing Environment Variables");
     return res.status(500).json({ 
       error: 'Server misconfigured', 
       details: 'GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is missing from Vercel settings.' 
@@ -31,10 +28,12 @@ export default async function handler(req, res) {
       clientSecret
     });
 
-    // If GitHub explicitly rejected our keys, output their exact reason
+    // 🔍 THIS LOG WILL PRINT THE REAL GITHUB ERROR IN YOUR BROWSER NETWORKS LOG
     if (tokenData.error) {
+      console.error("GitHub OAuth Rejection Summary:", tokenData);
       return res.status(400).json({ 
-        error: tokenData.error, 
+        error: "GitHub Rejected Request",
+        message: tokenData.error, 
         details: tokenData.error_description 
       });
     }
