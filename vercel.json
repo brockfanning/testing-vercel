@@ -1,13 +1,24 @@
 {
   "version": 2,
-  "routes": [
+  "headers": [
     {
-      "src": "/api/auth/getAccessToken",
-      "dest": "/api/auth.js"
+      "source": "/api/auth/(.*)",
+      "headers": [
+        { "key": "Access-Control-Allow-Credentials", "value": "true" },
+        { "key": "Access-Control-Allow-Origin", "value": "https://brockfanning.github.io" },
+        { "key": "Access-Control-Allow-Methods", "value": "GET,OPTIONS,PATCH,DELETE,POST,PUT" },
+        { "key": "Access-Control-Allow-Headers", "value": "X-CSRF-Token, X-Requested-With, Accept, Accept-Version, Content-Length, Content-MD5, Content-Type, Date, X-Api-Version" }
+      ]
+    }
+  ],
+  "rewrites": [
+    {
+      "source": "/api/auth/getAccessToken",
+      "destination": "/api/auth.js"
     },
     {
-      "src": "/api/auth",
-      "dest": "/api/auth.js"
+      "source": "/api/auth",
+      "destination": "/api/auth.js"
     }
   ]
 }
