@@ -1,21 +1,20 @@
 import { exchangeOAuthToken } from "./core-logic.js";
 
 export default async function handler(req, res) {
-  // OPTIONS checks are now completely taken care of by vercel.json headers
+  // Handle the browser's automatic CORS pre-flight validation checks safely
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method Not Allowed' });
-  }
+  // 1. Look for the code inside the URL query string OR inside the raw JSON body text
+  const code = req.query.code || (req.body && req.body.code);
 
-  const { code } = req.body;
   if (!code) {
     return res.status(400).json({ error: 'Missing temporary authorization code' });
   }
 
   try {
+    // 2. Pass the code along to finish the handshake
     const tokenData = await exchangeOAuthToken({
       code,
       clientId: process.env.GITHUB_CLIENT_ID,
@@ -26,10 +25,11 @@ export default async function handler(req, res) {
       return res.status(400).json({ error: tokenData.error_description });
     }
 
+    // 3. Return the token data exactly as expected by the Open SDG library context
     return res.status(200).json({ access_token: tokenData.access_token });
 
   } catch (error) {
-    console.error("OAuth Error:", error);
+    console.error("OAuth Bridge Error:", error);
     return res.status(500).json({ error: 'Internal OAuth exchange error', details: error.message });
   }
 }
