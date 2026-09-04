@@ -14,10 +14,11 @@ export default async function handler(req, res) {
   const clientId = process.env.GITHUB_CLIENT_ID;
   const clientSecret = process.env.GITHUB_CLIENT_SECRET;
 
+  // 🔍 THIS SAFEGUARD TRACE WILL TELL US IF VERCEL ISSUED BLANK ENVIRONMENT KEYS
   if (!clientId || !clientSecret) {
     return res.status(500).json({ 
-      error: 'Server misconfigured', 
-      details: 'GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is missing from Vercel settings.' 
+      error: 'Vercel Environment Keys Missing', 
+      details: 'The backend code is receiving empty text for GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET. Please ensure the Preview environment box is checked in Vercel settings.' 
     });
   }
 
@@ -28,9 +29,7 @@ export default async function handler(req, res) {
       clientSecret
     });
 
-    // 🔍 THIS LOG WILL PRINT THE REAL GITHUB ERROR IN YOUR BROWSER NETWORKS LOG
     if (tokenData.error) {
-      console.error("GitHub OAuth Rejection Summary:", tokenData);
       return res.status(400).json({ 
         error: "GitHub Rejected Request",
         message: tokenData.error, 
