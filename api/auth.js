@@ -1,31 +1,44 @@
 import { exchangeOAuthToken } from "./core-logic.js";
 
 export default async function handler(req, res) {
-  // Handle the browser's automatic CORS pre-flight validation checks safely
   if (req.method === "OPTIONS") {
     return res.status(200).end();
   }
 
-  // 1. Look for the code inside the URL query string OR inside the raw JSON body text
   const code = req.query.code || (req.body && req.body.code);
 
   if (!code) {
     return res.status(400).json({ error: 'Missing temporary authorization code' });
   }
 
+  // 1. Read variables right here at the root entry level
+  const clientId = process.env.GITHUB_CLIENT_ID;
+  const clientSecret = process.env.GITHUB_CLIENT_SECRET;
+
+  // 2. Fail early if Vercel hasn't injected the keys yet
+  if (!clientId || !clientSecret) {
+    console.error("Vercel Configuration Error: Missing Environment Variables");
+    return res.status(500).json({ 
+      error: 'Server misconfigured', 
+      details: 'GITHUB_CLIENT_ID or GITHUB_CLIENT_SECRET is missing from Vercel settings.' 
+    });
+  }
+
   try {
-    // 2. Pass the code along to finish the handshake
     const tokenData = await exchangeOAuthToken({
       code,
-      clientId: process.env.GITHUB_CLIENT_ID,
-      clientSecret: process.env.GITHUB_CLIENT_SECRET
+      clientId,
+      clientSecret
     });
 
+    // If GitHub explicitly rejected our keys, output their exact reason
     if (tokenData.error) {
-      return res.status(400).json({ error: tokenData.error_description });
+      return res.status(400).json({ 
+        error: tokenData.error, 
+        details: tokenData.error_description 
+      });
     }
 
-    // 3. Return the token data exactly as expected by the Open SDG library context
     return res.status(200).json({ access_token: tokenData.access_token });
 
   } catch (error) {
