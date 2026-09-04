@@ -2,6 +2,10 @@
   "version": 2,
   "routes": [
     {
+      "src": "/api/auth/getAccessToken",
+      "dest": "/api/auth.js"
+    },
+    {
       "src": "/api/auth",
       "dest": "/api/auth.js"
     }
